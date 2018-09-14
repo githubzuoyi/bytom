@@ -28,7 +28,6 @@ func (c *Chain) ValidateTx(tx *types.Tx) (bool, error) {
 	if ok := c.txPool.HaveTransaction(&tx.ID); ok {
 		return false, c.txPool.GetErrCache(&tx.ID)
 	}
-
 	bh := c.BestBlockHeader()
 	block := types.MapBlock(&types.Block{BlockHeader: *bh})
 	gasStatus, err := validation.ValidateTx(tx.Tx, block)
@@ -36,6 +35,5 @@ func (c *Chain) ValidateTx(tx *types.Tx) (bool, error) {
 		c.txPool.AddErrCache(&tx.ID, err)
 		return false, err
 	}
-
 	return c.txPool.ProcessTransaction(tx, err != nil, block.BlockHeader.Height, gasStatus.BTMValue)
 }
