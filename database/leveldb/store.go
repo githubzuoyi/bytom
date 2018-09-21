@@ -22,6 +22,7 @@ var (
 	blockPrefix       = []byte("B:")
 	blockHeaderPrefix = []byte("BH:")
 	txStatusPrefix    = []byte("BTS:")
+	cliamTxPreFix     = []byte("Claim:")
 )
 
 func loadBlockStoreStateJSON(db dbm.DB) *protocol.BlockStoreState {
@@ -57,6 +58,10 @@ func calcBlockHeaderKey(height uint64, hash *bc.Hash) []byte {
 
 func calcTxStatusKey(hash *bc.Hash) []byte {
 	return append(txStatusPrefix, hash.Bytes()...)
+}
+
+func calcClaimTxKey(hash *bc.Hash) []byte {
+	return append(cliamTxPreFix, hash.Bytes()...)
 }
 
 // GetBlock return the block by given hash
@@ -133,7 +138,7 @@ func (s *Store) LoadBlockIndex(stateBestHeight uint64) (*state.BlockIndex, error
 		if err := bh.UnmarshalText(bhIter.Value()); err != nil {
 			return nil, err
 		}
-		
+
 		// If a block with a height greater than the best height of state is added to the index,
 		// It may cause a bug that the new block cant not be process properly.
 		if bh.Height > stateBestHeight {
@@ -202,4 +207,18 @@ func (s *Store) SaveChainStatus(node *state.BlockNode, view *state.UtxoViewpoint
 	batch.Set(blockStoreKey, bytes)
 	batch.Write()
 	return nil
+}
+
+func (s *Store) IsWithdrawSpent(hash *bc.Hash) bool {
+	data := s.db.Get(calcClaimTxKey(hash))
+	if data != nil {
+		return true
+	}
+	return false
+}
+
+func (s *Store) SetWithdrawSpent(hash *bc.Hash) {
+	batch := s.db.NewBatch()
+	batch.Set(calcClaimTxKey(hash), []byte("1"))
+	batch.Write()
 }
