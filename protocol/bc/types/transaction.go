@@ -69,7 +69,7 @@ type TxData struct {
 func (tx *TxData) MarshalText() ([]byte, error) {
 	var buf bytes.Buffer
 	if _, err := tx.WriteTo(&buf); err != nil {
-		return nil, err
+		return nil, nil
 	}
 
 	b := make([]byte, hex.EncodedLen(buf.Len()))
